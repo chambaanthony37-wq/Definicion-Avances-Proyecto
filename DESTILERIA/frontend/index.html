@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CENESTUR - Control de Destilería</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 antialiased text-base">
+
+    <!-- CONTENEDOR DE AUTENTICACIÓN (LOGIN/REGISTRO) -->
+    <div id="auth-container" class="w-full min-h-screen flex items-center justify-center bg-slate-900 absolute inset-0 z-50">
+        <div class="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200">
+            <div class="flex flex-col items-center gap-3 mb-8 text-center">
+                <div class="w-16 h-16 rounded-xl bg-emerald-500 flex items-center justify-center font-black text-slate-900 text-3xl shadow-lg">C</div>
+                <div>
+                    <h2 id="auth-title" class="text-2xl font-extrabold text-slate-900">Iniciar Sesión</h2>
+                    <p id="auth-subtitle" class="text-sm text-slate-500 mt-1">Sistema de Gestión de Destilería</p>
+                </div>
+            </div>
+
+            <!-- Formulario de Login -->
+            <form id="form-login" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Correo Electrónico</label>
+                    <input type="email" id="login-email" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base focus:ring-2 focus:ring-emerald-500 outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Contraseña</label>
+                    <input type="password" id="login-password" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base focus:ring-2 focus:ring-emerald-500 outline-none" required>
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-base shadow-md transition">
+                    Ingresar al Sistema
+                </button>
+                <p class="text-center text-sm text-slate-500 mt-4">¿No tienes cuenta? <button type="button" id="btn-show-register" class="text-emerald-600 font-bold hover:underline">Regístrate aquí</button></p>
+            </form>
+
+            <!-- Formulario de Registro -->
+            <form id="form-register" class="space-y-5 hidden">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Correo Electrónico</label>
+                    <input type="email" id="reg-email" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base focus:ring-2 focus:ring-emerald-500 outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Contraseña (Mínimo 6 caracteres)</label>
+                    <input type="password" id="reg-password" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base focus:ring-2 focus:ring-emerald-500 outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Rol a cumplir</label>
+                    <select id="reg-rol" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base focus:ring-2 focus:ring-emerald-500 outline-none" required>
+                        <option value="Administrador">Administrador</option>
+                        <option value="Jefe de Bodega">Jefe de Bodega</option>
+                        <option value="Operador de Producción">Operador de Producción</option>
+                        <option value="Inspector de Calidad">Inspector de Calidad</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl text-base shadow-md transition">
+                    Registrar Usuario
+                </button>
+                <p class="text-center text-sm text-slate-500 mt-4">¿Ya tienes cuenta? <button type="button" id="btn-show-login" class="text-emerald-600 font-bold hover:underline">Inicia Sesión</button></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- CONTENEDOR PRINCIPAL DEL SISTEMA -->
+    <div id="dashboard-container" class="hidden flex min-h-screen w-full">
+        
+        <!-- SIDEBAR IZQUIERDO -->
+        <aside class="w-72 bg-slate-900 text-slate-300 flex flex-col justify-between p-6 min-h-screen shrink-0 shadow-xl">
+            <div class="space-y-8">
+                <div class="flex items-center gap-3 px-2">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center font-black text-slate-900 text-2xl shadow-lg">C</div>
+                    <div>
+                        <h1 class="font-bold text-white text-xl leading-tight">DESTILERIA</h1>
+                        <p class="text-xs text-slate-400">Sistema de Gestión</p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 rounded-xl p-4 flex items-center gap-3 border border-slate-700">
+                    <div id="ui-user-initial" class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-sm font-bold text-emerald-400">?</div>
+                    <div class="overflow-hidden">
+                        <p id="ui-user-email" class="text-sm font-semibold text-white truncate">Cargando...</p>
+                        <p id="ui-user-role" class="text-xs text-emerald-400 font-bold mt-0.5">Rol</p>
+                    </div>
+                </div>
+
+                <!-- MENÚ DINÁMICO (Se filtra por data-roles) -->
+                <nav id="menu-navegacion" class="space-y-2">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider px-3 mb-3">MÓDULOS DE ACCESO</p>
+                    
+                    <!-- JEFE DE BODEGA & ADMIN -->
+                    <button data-roles="Administrador,Jefe de Bodega" onclick="navegar('proveedores')" class="sidebar-link hidden w-full flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold transition text-left hover:bg-slate-800">
+                        Gestionar Proveedores
+                    </button>
+                    <button data-roles="Administrador,Jefe de Bodega" onclick="navegar('bodega')" class="sidebar-link hidden w-full flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold transition text-left hover:bg-slate-800">
+                        Bodega (Materia Prima)
+                    </button>
+                    <button data-roles="Administrador,Jefe de Bodega" onclick="navegar('inventario-final')" class="sidebar-link hidden w-full flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold transition text-left hover:bg-slate-800">
+                        Inventario & Alertas
+                    </button>
+
+                    <!-- OPERADOR DE PRODUCCIÓN & ADMIN -->
+                    <button data-roles="Administrador,Operador de Producción" onclick="navegar('produccion')" class="sidebar-link hidden w-full flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold transition text-left hover:bg-slate-800">
+                        Lotes y Fases
+                    </button>
+                    <button data-roles="Administrador,Operador de Producción" onclick="navegar('metricas')" class="sidebar-link hidden w-full flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold transition text-left hover:bg-slate-800">
+                        Métricas en Vivo
+                    </button>
+
+                    <!-- INSPECTOR DE CALIDAD & ADMIN -->
+                    <button data-roles="Administrador,Inspector de Calidad" onclick="navegar('calidad')" class="sidebar-link hidden w-full flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold transition text-left hover:bg-slate-800">
+                        Control de Calidad
+                    </button>
+                </nav>
+            </div>
+            
+            <div class="border-t border-slate-800 pt-4 space-y-4">
+                <button id="btn-logout" class="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white font-bold py-3 rounded-xl text-sm transition">
+                    Cerrar Sesión
+                </button>
+            </div>
+        </aside>
+
+        <!-- ÁREA DE CONTENIDO PRINCIPAL -->
+        <main class="flex-1 p-10 overflow-y-auto max-w-7xl mx-auto w-full">
+
+            <!-- ============================================== -->
+            <!-- VISTAS DE BODEGA -->
+            <!-- ============================================== -->
+            <section id="view-proveedores" class="modulo-view hidden space-y-6">
+                <!-- (Mismo código de tu vista de proveedores original) -->
+                <div class="border-b border-slate-200 pb-4">
+                    <h2 class="text-3xl font-extrabold text-slate-900">Proveedores</h2>
+                    <p class="text-sm text-slate-500 mt-1">Gestión de proveedores e insumos destilables</p>
+                </div>
+                <!-- ... Tu Grid de proveedores ... -->
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit space-y-4">
+                        <h3 class="text-base font-bold text-slate-800 uppercase tracking-wide">Nuevo Proveedor</h3>
+                        <form id="form-prov" class="space-y-4">
+                            <div><label class="block text-xs font-semibold text-slate-600 mb-1">Nombre</label><input type="text" id="p-nombre" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base outline-none focus:ring-2 focus:ring-emerald-500" required></div>
+                            <div><label class="block text-xs font-semibold text-slate-600 mb-1">Cantidad/RUC</label><input type="text" id="p-ruc" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base outline-none focus:ring-2 focus:ring-emerald-500" required></div>
+                            <div><label class="block text-xs font-semibold text-slate-600 mb-1">Contacto</label><input type="text" id="p-contacto" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base outline-none focus:ring-2 focus:ring-emerald-500" required></div>
+                            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition">Guardar</button>
+                        </form>
+                    </div>
+                    <div class="xl:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-slate-700 text-lg">Listado de Proveedores</div>
+                        <table class="w-full text-left text-base"><thead class="bg-slate-100 border-b border-slate-200 text-slate-600"><tr><th class="p-4">Nombre</th><th class="p-4">Info</th><th class="p-4">Contacto</th><th class="p-4"></th></tr></thead><tbody id="tbl-proveedores" class="divide-y divide-slate-100"></tbody></table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-bodega" class="modulo-view hidden space-y-6">
+                <!-- (Mismo código de tu vista de bodega original) -->
+                <div class="border-b border-slate-200 pb-4">
+                    <h2 class="text-3xl font-extrabold text-slate-900">Materia Prima</h2>
+                    <p class="text-sm text-slate-500 mt-1">Registrar entradas de materia prima a bodega</p>
+                </div>
+                <!-- ... Tu Grid de materia prima ... -->
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit space-y-4">
+                        <h3 class="text-base font-bold text-slate-800 uppercase tracking-wide">Ingresar Materia Prima</h3>
+                        <form id="form-mp" class="space-y-4">
+                            <div><label class="block text-xs font-semibold text-slate-600 mb-1">Insumo</label><input type="text" id="mp-nombre" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base outline-none focus:ring-2 focus:ring-emerald-500" required></div>
+                            <div><label class="block text-xs font-semibold text-slate-600 mb-1">Proveedor</label><select id="mp-proveedor" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base outline-none focus:ring-2 focus:ring-emerald-500" required></select></div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div><label class="block text-xs font-semibold text-slate-600 mb-1">Galones</label><input type="number" step="0.01" id="mp-galones" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base outline-none focus:ring-2 focus:ring-emerald-500" required></div>
+                                <div><label class="block text-xs font-semibold text-slate-600 mb-1">Total (Litros)</label><input type="text" id="mp-cantidad" class="w-full bg-slate-100 border border-slate-300 rounded-xl p-3 text-base font-bold text-emerald-700 outline-none cursor-not-allowed" readonly required></div>
+                            </div>
+                            <input type="hidden" id="mp-unidad" value="Litros">
+                            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition">Registrar Stock</button>
+                        </form>
+                    </div>
+                    <div class="xl:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-slate-700 text-lg">Stock en Bodega</div>
+                        <table class="w-full text-left text-base"><thead class="bg-slate-100 border-b border-slate-200 text-slate-600"><tr><th class="p-4">Insumo</th><th class="p-4">Proveedor</th><th class="p-4">Cantidad</th></tr></thead><tbody id="tbl-bodega" class="divide-y divide-slate-100"></tbody></table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- NUEVA VISTA: Inventario Final y Alertas -->
+            <section id="view-inventario-final" class="modulo-view hidden space-y-6">
+                <div class="border-b border-slate-200 pb-4 flex justify-between items-end">
+                    <div>
+                        <h2 class="text-3xl font-extrabold text-slate-900">Inventario y Alertas</h2>
+                        <p class="text-sm text-slate-500 mt-1">Gestionar producto terminado y alertas de reorden</p>
+                    </div>
+                    <button class="bg-rose-100 text-rose-700 font-bold py-2 px-4 rounded-xl border border-rose-200 shadow-sm flex items-center gap-2">
+                        <span>⚠️</span> Emitir Alerta de Reorden Manual
+                    </button>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-slate-700 text-lg">Producto Terminado Empacado</div>
+                    <table class="w-full text-left text-base">
+                        <thead class="bg-slate-100 border-b border-slate-200 text-slate-600">
+                            <tr>
+                                <th class="p-4">Código Lote</th>
+                                <th class="p-4">Producto</th>
+                                <th class="p-4">Botellas (750ml)</th>
+                                <th class="p-4">Estado Inventario</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr class="hover:bg-slate-50">
+                                <td class="p-4 font-mono font-bold text-slate-600">LT-9821</td>
+                                <td class="p-4">Ron Blanco</td>
+                                <td class="p-4">120</td>
+                                <td class="p-4"><span class="px-2 py-1 bg-emerald-100 text-emerald-800 rounded-lg text-xs font-bold">Stock Óptimo</span></td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 bg-rose-50/30">
+                                <td class="p-4 font-mono font-bold text-slate-600">LT-7432</td>
+                                <td class="p-4">Aguardiente Tradicional</td>
+                                <td class="p-4 text-rose-600 font-bold">15</td>
+                                <td class="p-4"><span class="px-2 py-1 bg-rose-100 text-rose-800 rounded-lg text-xs font-bold">Alerta Reorden (Bajo)</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- VISTAS DE PRODUCCIÓN -->
+            <!-- ============================================== -->
+            <section id="view-produccion" class="modulo-view hidden space-y-6">
+                <!-- Modificada para agregar registro de fases -->
+                <div class="border-b border-slate-200 pb-4">
+                    <h2 class="text-3xl font-extrabold text-slate-900">Producción y Fases</h2>
+                    <p class="text-sm text-slate-500 mt-1">Iniciar lote y registrar fases de destilación</p>
+                </div>
+
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                    <!-- Iniciar Lote -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit space-y-4 flex flex-col justify-between">
+                        <div class="space-y-4">
+                            <h3 class="text-base font-bold text-slate-800 uppercase tracking-wide">Iniciar Lote</h3>
+                            <form id="form-lote" class="space-y-4">
+                                <div><label class="block text-xs font-semibold text-slate-600 mb-1">Materia Prima</label><select id="lote-materia" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 outline-none" required></select></div>
+                                <div><label class="block text-xs font-semibold text-slate-600 mb-1">Litros a Usar</label><input type="number" step="0.01" id="lote-cantidad" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 outline-none" required></div>
+                                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition">Iniciar Lote</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Fases de Lote -->
+                    <div class="xl:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                            <span class="font-bold text-slate-700 text-lg">Lotes en Proceso</span>
+                        </div>
+                        <table class="w-full text-left text-base">
+                            <thead class="bg-slate-100 border-b border-slate-200 text-slate-600"><tr><th class="p-4">Lote ID</th><th class="p-4">Insumo</th><th class="p-4">Fase Actual (Registro)</th></tr></thead>
+                            <tbody id="tbl-lotes" class="divide-y divide-slate-100">
+                                <!-- Se llena vía JS. Agregaremos un select para cambiar fase -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- NUEVA VISTA: Métricas en Tiempo Real -->
+            <section id="view-metricas" class="modulo-view hidden space-y-6">
+                <div class="border-b border-slate-200 pb-4">
+                    <h2 class="text-3xl font-extrabold text-slate-900">Métricas en Tiempo Real</h2>
+                    <p class="text-sm text-slate-500 mt-1">Monitoreo de equipos de destilación</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Tarjetas de métricas simuladas -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center">
+                        <div class="text-sm font-bold text-slate-500 uppercase mb-2">Temp. Caldera</div>
+                        <div class="text-5xl font-black text-slate-800">85<span class="text-2xl">°C</span></div>
+                        <div class="mt-4 px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold">Rango Normal</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center">
+                        <div class="text-sm font-bold text-slate-500 uppercase mb-2">Presión Vapor</div>
+                        <div class="text-5xl font-black text-slate-800">1.2<span class="text-2xl">bar</span></div>
+                        <div class="mt-4 px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold">Rango Normal</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center text-center border-t-4 border-t-amber-500">
+                        <div class="text-sm font-bold text-slate-500 uppercase mb-2">Flujo Refrigerante</div>
+                        <div class="text-5xl font-black text-amber-600">4<span class="text-2xl">L/m</span></div>
+                        <div class="mt-4 px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold">Bajo Flujo - Revisar</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================== -->
+            <!-- VISTAS DE CALIDAD -->
+            <!-- ============================================== -->
+            <section id="view-calidad" class="modulo-view hidden space-y-6">
+                <!-- Modificada para adjuntar respaldos y evaluar (aprobar/rechazar) -->
+                <div class="border-b border-slate-200 pb-4">
+                    <h2 class="text-3xl font-extrabold text-slate-900">Control de Calidad</h2>
+                    <p class="text-sm text-slate-500 mt-1">Pruebas fisicoquímicas, evaluación y respaldos</p>
+                </div>
+
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit space-y-4">
+                        <h3 class="text-base font-bold text-slate-800 uppercase tracking-wide">Evaluar Lote</h3>
+                        <form id="form-calidad" class="space-y-4">
+                            <div><label class="block text-xs font-semibold text-slate-600 mb-1">Lote de Producción</label><select id="calidad-lote" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 outline-none" required></select></div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div><label class="block text-xs font-semibold text-slate-600 mb-1">% ABV</label><input type="number" id="calidad-abv" step="0.1" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 outline-none" required></div>
+                                <div><label class="block text-xs font-semibold text-slate-600 mb-1">pH</label><input type="number" id="calidad-ph" step="0.1" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 outline-none" required></div>
+                            </div>
+                            
+                            <!-- Nuevo: Respaldos Externos -->
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Adjuntar Respaldo Externo (PDF/IMG)</label>
+                                <input type="file" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer">
+                            </div>
+
+                            <!-- Evaluar Lote -->
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Dictamen de Evaluación</label>
+                                <select id="calidad-veredicto" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 outline-none font-bold" required>
+                                    <option value="true" class="text-emerald-700">✓ APROBAR LOTE</option>
+                                    <option value="false" class="text-rose-700">✕ RECHAZAR LOTE</option>
+                                </select>
+                            </div>
+                            <div><label class="block text-xs font-semibold text-slate-600 mb-1">Observaciones</label><textarea id="calidad-obs" rows="2" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 outline-none"></textarea></div>
+                            <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl transition">Registrar Prueba y Evaluación</button>
+                        </form>
+                    </div>
+
+                    <div class="xl:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-slate-700 text-lg">Historial de Evaluación</div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-base"><thead class="bg-slate-100 border-b border-slate-200 text-slate-600"><tr><th class="p-4">Lote</th><th class="p-4">Resultados</th><th class="p-4">Evaluación</th><th class="p-4">Respaldo</th></tr></thead><tbody id="tbl-calidad" class="divide-y divide-slate-100"></tbody></table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
