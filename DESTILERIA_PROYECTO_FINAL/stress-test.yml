@@ -1,0 +1,26 @@
+config:
+  target: "https://mkihtmoauffvjmenxvli.supabase.co"
+  
+  http:
+    cookieJar: false
+    timeout: 10
+
+  defaults:
+    headers:
+      apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1raWh0bW9hdWZmdmptZW54dmxpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4MzU0ODgsImV4cCI6MjEwMzQxMTQ4OH0.Eo7gPtpBF4m16I26-BVnnSY6o9O50MG25mN5ONB3-vY"
+      Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1raWh0bW9hdWZmdmptZW54dmxpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4MzU0ODgsImV4cCI6MjEwMzQxMTQ4OH0.Eo7gPtpBF4m16I26-BVnnSY6o9O50MG25mN5ONB3-vY"
+      Content-Type: "application/json"
+
+  phases:
+    - duration: 20
+      arrivalRate: 3
+      name: "Prueba Controlada"
+
+scenarios:
+  - name: "Login Directo en Supabase Auth"
+    flow:
+      - post:
+          url: "/auth/v1/token?grant_type=password"
+          json:
+            email: "chamba15@gmail.com"
+            password: "123456"
