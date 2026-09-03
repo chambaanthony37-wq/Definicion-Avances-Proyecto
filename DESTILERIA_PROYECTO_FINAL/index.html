@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CENESTUR - Control de Destilería</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 antialiased text-base">
+
+    <!-- ========================================== -->
+    <!-- CONTENEDOR DE AUTENTICACIÓN (SOLO LOGIN)    -->
+    <!-- ========================================== -->
+    <div id="auth-container" class="hidden w-full min-h-screen flex items-center justify-center bg-slate-900 absolute inset-0 z-50">
+        <div class="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200">
+            <div class="flex flex-col items-center gap-3 mb-8 text-center">
+                <div class="w-16 h-16 rounded-xl bg-emerald-500 flex items-center justify-center font-black text-slate-900 text-3xl shadow-lg">C</div>
+                <div>
+                    <h2 id="auth-title" class="text-2xl font-extrabold text-slate-900">Iniciar Sesión</h2>
+                    <p class="text-sm text-slate-500 mt-1">Sistema de Gestión de Destilería</p>
+                </div>
+            </div>
+
+            <!-- Formulario de Login -->
+            <form id="form-login" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Correo Electrónico</label>
+                    <input type="email" id="login-email" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base focus:ring-2 focus:ring-emerald-500 outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Contraseña</label>
+                    <input type="password" id="login-password" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base focus:ring-2 focus:ring-emerald-500 outline-none" required>
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-base shadow-md transition">
+                    Ingresar al Sistema
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- CONTENEDOR PRINCIPAL DEL SISTEMA           -->
+    <!-- ========================================== -->
+    <div id="dashboard-container" class="hidden flex min-h-screen w-full">
+        
+        <!-- SIDEBAR -->
+        <aside class="w-72 bg-slate-900 text-slate-300 flex flex-col justify-between p-6 min-h-screen shrink-0 shadow-xl">
+            <div class="space-y-8">
+                <div class="flex items-center gap-3 px-2">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center font-black text-slate-900 text-2xl shadow-lg">C</div>
+                    <div>
+                        <h1 class="font-bold text-white text-xl leading-tight">DESTILERIA</h1>
+                        <p class="text-xs text-slate-400">Sistema de Gestión</p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 rounded-xl p-4 flex items-center gap-3 border border-slate-700">
+                    <div id="ui-user-initial" class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-sm font-bold text-emerald-400">?</div>
+                    <div class="overflow-hidden">
+                        <p id="ui-user-email" class="text-sm font-semibold text-white truncate">Cargando...</p>
+                        <p id="ui-user-role" class="text-xs text-emerald-400 font-bold mt-0.5">Rol</p>
+                    </div>
+                </div>
+
+                <nav id="menu-navegacion" class="space-y-2">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider px-3 mb-3">MÓDULOS DE ACCESO</p>
+                    
+                    <button data-roles="Administrador,Jefe de Bodega" onclick="navegar('proveedores')" class="sidebar-link hidden w-full flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold transition text-left hover:bg-slate-800">
+                        Gestionar Proveedores
+                    </button>
+                    <button data-roles="Administrador,Jefe de Bodega" onclick="navegar('bodega')" class="sidebar-link hidden w-full flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold transition text-left hover:bg-slate-800">
+                        Bodega (Materia Prima)
+                    </button>
+                    <button data-roles="Administrador,Operador de Producción" onclick="navegar('produccion')" class="sidebar-link hidden w-full flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold transition text-left hover:bg-slate-800">
+                        Lotes y Fases
+                    </button>
+                    <button data-roles="Administrador,Operador de Producción" onclick="navegar('inventario-final')" class="sidebar-link hidden w-full flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold transition text-left hover:bg-slate-800">
+                        Inventario & Alertas
+                    </button>
+                    <button data-roles="Administrador,Inspector de Calidad" onclick="navegar('calidad')" class="sidebar-link hidden w-full flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold transition text-left hover:bg-slate-800">
+                        Control de Calidad
+                    </button>
+                    <button data-roles="Administrador" onclick="navegar('informes')" class="sidebar-link hidden w-full flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold transition text-left hover:bg-slate-800">
+                        Generar Informes
+                    </button>
+                    <button data-roles="Administrador" onclick="navegar('usuarios')" class="sidebar-link hidden w-full flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold transition text-left hover:bg-slate-800">
+                        Gestionar Usuarios
+                    </button>
+                    <!-- Solo Jefe de Bodega -->
+                    <button data-roles="Jefe de Bodega" onclick="navegar('mensajes')" class="sidebar-link hidden w-full flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold transition text-left hover:bg-slate-800">
+                        Bandeja de Mensajes
+                        <span id="badge-mensajes" class="ml-auto bg-rose-500 text-white text-xs font-bold px-2 py-0.5 rounded-full hidden">0</span>
+                    </button>
+                </nav>
+            </div>
+            
+            <div class="border-t border-slate-800 pt-4 space-y-4">
+                <button id="btn-logout" class="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white font-bold py-3 rounded-xl text-sm transition">
+                    Cerrar Sesión
+                </button>
+            </div>
+        </aside>
+
+        <!-- ========================================== -->
+        <!-- ÁREA DE CONTENIDO PRINCIPAL                -->
+        <!-- ========================================== -->
+        <main class="flex-1 p-10 overflow-y-auto max-w-7xl mx-auto w-full">
+
+            <!-- VISTAS (todas iguales a antes) -->
+            <!-- VISTA PROVEEDORES -->
+            <section id="view-proveedores" class="modulo-view hidden space-y-6">
+                <div class="border-b border-slate-200 pb-4">
+                    <h2 class="text-3xl font-extrabold text-slate-900">Proveedores</h2>
+                    <p class="text-sm text-slate-500 mt-1">Gestión de proveedores e insumos destilables</p>
+                </div>
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit space-y-4">
+                        <h3 id="titulo-form-prov" class="text-base font-bold text-slate-800 uppercase tracking-wide">Nuevo Proveedor</h3>
+                        <form id="form-prov" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Nombre</label>
+                                <input type="text" id="p-nombre" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base outline-none focus:ring-2 focus:ring-emerald-500" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Producto</label>
+                                <input type="text" id="p-ruc" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base outline-none focus:ring-2 focus:ring-emerald-500" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Contacto</label>
+                                <input type="text" id="p-contacto" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base outline-none focus:ring-2 focus:ring-emerald-500" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Homologado</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="p-homologado" checked class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500">
+                                    <span class="text-sm text-slate-600">Marcar como proveedor homologado</span>
+                                </div>
+                            </div>
+                            <button type="submit" id="btn-guardar-proveedor" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition">Guardar</button>
+                        </form>
+                    </div>
+                    <div class="xl:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-slate-700 text-lg">Listado de Proveedores</div>
+                        <table class="w-full text-left text-base">
+                            <thead class="bg-slate-100 border-b border-slate-200 text-slate-600">
+                                <tr><th class="p-4">Nombre</th><th class="p-4">Producto</th><th class="p-4">Contacto</th><th class="p-4">Homologado</th><th class="p-4">Acciones</th></tr>
+                            </thead>
+                            <tbody id="tbl-proveedores" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VISTA BODEGA -->
+<section id="view-bodega" class="modulo-view hidden space-y-6">
+    <div class="border-b border-slate-200 pb-4">
+        <h2 class="text-3xl font-extrabold text-slate-900">Materia Prima</h2>
+        <p class="text-sm text-slate-500 mt-1">Registrar entradas de materia prima a bodega</p>
+    </div>
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit space-y-4">
+            <h3 id="titulo-form-mp" class="text-base font-bold text-slate-800 uppercase tracking-wide">Ingresar Materia Prima</h3>
+            <form id="form-mp" class="space-y-4">
+                <!-- PROVEEDOR (PRIMERO) -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Proveedor</label>
+                    <select id="mp-proveedor" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base outline-none focus:ring-2 focus:ring-emerald-500" required>
+                        <option value="">Seleccione proveedor</option>
+                    </select>
+                </div>
+                <!-- INSUMO (SELECT DEPENDIENTE) -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Insumo</label>
+                    <select id="mp-nombre" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base outline-none focus:ring-2 focus:ring-emerald-500" required>
+                        <option value="">Seleccione insumo</option>
+                    </select>
+                </div>
+                <!-- GALONES Y LITROS -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Galones</label>
+                        <input type="number" step="0.01" id="mp-galones" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base outline-none focus:ring-2 focus:ring-emerald-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Total (Litros)</label>
+                        <input type="text" id="mp-cantidad" class="w-full bg-slate-100 border border-slate-300 rounded-xl p-3 text-base font-bold text-emerald-700 outline-none cursor-not-allowed" readonly required>
+                    </div>
+                </div>
+                <!-- ESTADO -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Estado del Insumo</label>
+                    <select id="mp-estado" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base outline-none focus:ring-2 focus:ring-emerald-500" required>
+                        <option value="Aprobado">Aprobado</option>
+                        <option value="Rechazado">Rechazado</option>
+                    </select>
+                </div>
+                <input type="hidden" id="mp-unidad" value="Litros">
+                <button type="submit" id="btn-guardar-mp" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition">Registrar Stock</button>
+            </form>
+        </div>
+        <div class="xl:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-slate-700 text-lg">Stock en Bodega</div>
+            <table class="w-full text-left text-base">
+                <thead class="bg-slate-100 border-b border-slate-200 text-slate-600">
+                    <tr><th class="p-4">Insumo</th><th class="p-4">Proveedor</th><th class="p-4">Cantidad</th><th class="p-4">Estado</th><th class="p-4">Acciones</th></tr>
+                </thead>
+                <tbody id="tbl-bodega" class="divide-y divide-slate-100"></tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+            <!-- VISTA INVENTARIO FINAL -->
+            <section id="view-inventario-final" class="modulo-view hidden space-y-6">
+                <div class="border-b border-slate-200 pb-4 flex justify-between items-end">
+                    <div>
+                        <h2 class="text-3xl font-extrabold text-slate-900">Inventario y Alertas</h2>
+                        <p class="text-sm text-slate-500 mt-1">Gestionar producto terminado y alertas de reorden</p>
+                    </div>
+                    <button id="btn-alerta-reorden" class="bg-rose-100 text-rose-700 font-bold py-2 px-4 rounded-xl border border-rose-200 shadow-sm flex items-center gap-2 hover:bg-rose-200 transition">
+                        <span>⚠️</span> Emitir Alerta de Reorden Manual
+                    </button>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-slate-700 text-lg">Producto Terminado Empacado</div>
+                    <table class="w-full text-left text-base">
+                        <thead class="bg-slate-100 border-b border-slate-200 text-slate-600">
+                            <tr><th class="p-4">Código Lote</th><th class="p-4">Producto</th><th class="p-4">Botellas (750ml)</th><th class="p-4">Estado Inventario</th></tr>
+                        </thead>
+                        <tbody id="tbl-inventario-final" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- VISTA PRODUCCIÓN -->
+            <section id="view-produccion" class="modulo-view hidden space-y-6">
+                <div class="border-b border-slate-200 pb-4">
+                    <h2 class="text-3xl font-extrabold text-slate-900">Producción y Fases</h2>
+                    <p class="text-sm text-slate-500 mt-1">Iniciar lote y registrar fases de destilación</p>
+                </div>
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit space-y-4 flex flex-col justify-between">
+                        <div class="space-y-4">
+                            <h3 id="titulo-form-lote" class="text-base font-bold text-slate-800 uppercase tracking-wide">Iniciar Lote</h3>
+                            <form id="form-lote" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Materia Prima</label>
+                                    <select id="lote-materia" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 outline-none" required></select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Litros a Usar</label>
+                                    <input type="number" step="0.01" id="lote-cantidad" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 outline-none" required>
+                                </div>
+                                <button type="submit" id="btn-guardar-lote" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition">Iniciar Lote</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="xl:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                            <span class="font-bold text-slate-700 text-lg">Lotes en Proceso</span>
+                        </div>
+                        <table class="w-full text-left text-base">
+                            <thead class="bg-slate-100 border-b border-slate-200 text-slate-600">
+                                <tr><th class="p-4">Lote ID</th><th class="p-4">Insumo</th><th class="p-4">Fase Actual</th><th class="p-4">Acciones</th></tr>
+                            </thead>
+                            <tbody id="tbl-lotes" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VISTA CALIDAD (sin campo de archivo) -->
+            <section id="view-calidad" class="modulo-view hidden space-y-6">
+                <div class="border-b border-slate-200 pb-4">
+                    <h2 class="text-3xl font-extrabold text-slate-900">Control de Calidad</h2>
+                    <p class="text-sm text-slate-500 mt-1">Pruebas fisicoquímicas, evaluación y respaldos</p>
+                </div>
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit space-y-4">
+                        <h3 id="titulo-form-calidad" class="text-base font-bold text-slate-800 uppercase tracking-wide">Evaluar Lote</h3>
+                        <form id="form-calidad" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Lote de Producción</label>
+                                <select id="calidad-lote" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 outline-none" required></select>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">% Alcohol</label>
+                                    <input type="number" id="calidad-abv" step="0.1" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 outline-none" required>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">pH (Acidez)</label>
+                                    <input type="number" id="calidad-ph" step="0.1" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 outline-none" required>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Dictamen de Evaluación</label>
+                                <select id="calidad-veredicto" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 outline-none font-bold" required>
+                                    <option value="true" class="text-emerald-700">✓ APROBAR LOTE</option>
+                                    <option value="false" class="text-rose-700">✕ RECHAZAR LOTE</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Observaciones</label>
+                                <textarea id="calidad-obs" rows="2" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 outline-none"></textarea>
+                            </div>
+                            <div id="div-categoria-anomalia" style="display: none;">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Categoría de Anomalía (requerido si rechaza)</label>
+                                <select id="calidad-categoria" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 outline-none">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="Problema de fermentación">Problema de fermentación</option>
+                                    <option value="Contaminación">Contaminación</option>
+                                    <option value="Desviación de parámetros">Desviación de parámetros</option>
+                                    <option value="Fallo en el proceso">Fallo en el proceso</option>
+                                    <option value="Otro">Otro</option>
+                                </select>
+                            </div>
+                            <button type="submit" id="btn-guardar-calidad" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl transition">Registrar Prueba y Evaluación</button>
+                        </form>
+                    </div>
+                    <div class="xl:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-slate-700 text-lg">Historial de Evaluación</div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-base">
+                                <thead class="bg-slate-100 border-b border-slate-200 text-slate-600">
+                                    <tr><th class="p-4">Lote</th><th class="p-4">Resultados</th><th class="p-4">Evaluación</th><th class="p-4">Observaciones</th><th class="p-4">Categoría</th><th class="p-4">Acciones</th></tr>
+                                </thead>
+                                <tbody id="tbl-calidad" class="divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VISTA INFORMES -->
+            <section id="view-informes" class="modulo-view hidden space-y-6">
+                <div class="border-b border-slate-200 pb-4">
+                    <h2 class="text-3xl font-extrabold text-slate-900">Generador de Informes</h2>
+                    <p class="text-sm text-slate-500 mt-1">Exporta reportes completos del sistema en formato PDF</p>
+                </div>
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit space-y-4">
+                        <h3 class="text-base font-bold text-slate-800 uppercase tracking-wide">Configurar Informe</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Tipo de Informe</label>
+                                <select id="informe-tipo" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 outline-none focus:ring-2 focus:ring-emerald-500">
+                                    <option value="completo">Informe Completo</option>
+                                    <option value="proveedores">Proveedores</option>
+                                    <option value="bodega">Materia Prima</option>
+                                    <option value="lotes">Lotes de Producción</option>
+                                    <option value="calidad">Control de Calidad</option>
+                                    <option value="inventario">Inventario Final</option>
+                                </select>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Fecha Desde</label>
+                                    <input type="date" id="informe-fecha-inicio" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 outline-none focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">Fecha Hasta</label>
+                                    <input type="date" id="informe-fecha-fin" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 outline-none focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                            </div>
+                            <button id="btn-generar-informe" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2">
+                                Generar Informe PDF
+                            </button>
+                            <button id="btn-ver-preview" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2">
+                                Vista Previa
+                            </button>
+                        </div>
+                    </div>
+                    <div class="xl:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                            <span class="font-bold text-slate-700 text-lg">Vista Previa del Informe</span>
+                            <span id="informe-registros" class="text-xs text-slate-500">0 registros</span>
+                        </div>
+                        <div id="informe-preview" class="p-4 max-h-[500px] overflow-y-auto">
+                            <div class="text-center text-slate-400 py-12">
+                                <span class="text-4xl block mb-4"></span>
+                                <p>Selecciona un tipo de informe y haz clic en "Vista Previa"</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VISTA MENSAJES -->
+            <section id="view-mensajes" class="modulo-view hidden space-y-6">
+                <div class="border-b border-slate-200 pb-4">
+                    <h2 class="text-3xl font-extrabold text-slate-900">Bandeja de Mensajes</h2>
+                    <p class="text-sm text-slate-500 mt-1">Mensajes y alertas del sistema</p>
+                </div>
+                <div class="flex gap-4 items-center flex-wrap">
+                    <button id="btn-filtrar-todos" class="px-4 py-2 rounded-xl text-sm font-bold bg-emerald-600 text-white transition hover:bg-emerald-700">Todos</button>
+                    <button id="btn-filtrar-no-leidos" class="px-4 py-2 rounded-xl text-sm font-bold bg-slate-200 text-slate-700 transition hover:bg-slate-300">No leídos</button>
+                    <button id="btn-filtrar-alertas" class="px-4 py-2 rounded-xl text-sm font-bold bg-slate-200 text-slate-700 transition hover:bg-slate-300">⚠️ Alertas</button>
+                    <button id="btn-filtrar-leidos" class="px-4 py-2 rounded-xl text-sm font-bold bg-slate-200 text-slate-700 transition hover:bg-slate-300">Leídos</button>
+                    <button id="btn-marcar-todos-leidos" class="px-4 py-2 rounded-xl text-sm font-bold bg-blue-100 text-blue-700 transition hover:bg-blue-200 ml-auto">
+                        Marcar todos como leídos
+                    </button>
+                </div>
+                <div id="lista-mensajes" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-slate-700 text-lg flex justify-between items-center">
+                        <span>Mensajes</span>
+                        <span id="total-mensajes" class="text-sm font-normal text-slate-500">0 mensajes</span>
+                    </div>
+                    <div id="contenedor-mensajes" class="divide-y divide-slate-100 max-h-[500px] overflow-y-auto"></div>
+                </div>
+            </section>
+
+            <!-- VISTA USUARIOS (con botón Editar) -->
+            <section id="view-usuarios" class="modulo-view hidden space-y-6">
+                <div class="border-b border-slate-200 pb-4">
+                    <h2 class="text-3xl font-extrabold text-slate-900">Gestión de Usuarios</h2>
+                    <p class="text-sm text-slate-500 mt-1">Registrar nuevos usuarios del sistema (solo Administrador)</p>
+                </div>
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit space-y-4">
+                        <h3 class="text-base font-bold text-slate-800 uppercase tracking-wide">Registrar Nuevo Usuario</h3>
+                        <form id="form-registro-usuario" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Correo Electrónico</label>
+                                <input type="email" id="reg-email" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base outline-none focus:ring-2 focus:ring-emerald-500" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Contraseña (mínimo 6 caracteres)</label>
+                                <input type="password" id="reg-password" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base outline-none focus:ring-2 focus:ring-emerald-500" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Rol</label>
+                                <select id="reg-rol" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base outline-none focus:ring-2 focus:ring-emerald-500" required>
+                                    <option value="Administrador">Administrador</option>
+                                    <option value="Jefe de Bodega">Jefe de Bodega</option>
+                                    <option value="Operador de Producción">Operador de Producción</option>
+                                    <option value="Inspector de Calidad">Inspector de Calidad</option>
+                                </select>
+                            </div>
+                            <button type="submit" id="btn-registrar-usuario" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition">
+                                Registrar Usuario
+                            </button>
+                        </form>
+                    </div>
+                    <div class="xl:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="p-4 bg-slate-50 border-b border-slate-200 font-bold text-slate-700 text-lg">Usuarios Registrados</div>
+                        <table class="w-full text-left text-base">
+                            <thead class="bg-slate-100 border-b border-slate-200 text-slate-600">
+                                <tr><th class="p-4">Email</th><th class="p-4">Rol</th><th class="p-4">Fecha Registro</th><th class="p-4">Acciones</th></tr>
+                            </thead>
+                            <tbody id="tbl-usuarios" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL DE EDICIÓN DE USUARIO                -->
+    <!-- ========================================== -->
+    <div id="modal-editar-usuario" class="modal-overlay" style="display:none;">
+        <div class="modal-confirm max-w-md">
+            <div class="modal-icon success">✏️</div>
+            <div class="modal-title">Editar Usuario</div>
+            <div class="modal-message text-left">
+                <form id="form-editar-usuario" class="space-y-4">
+                    <input type="hidden" id="edit-user-id">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Correo Electrónico</label>
+                        <input type="email" id="edit-email" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base outline-none focus:ring-2 focus:ring-emerald-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Rol</label>
+                        <select id="edit-rol" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base outline-none focus:ring-2 focus:ring-emerald-500" required>
+                            <option value="Administrador">Administrador</option>
+                            <option value="Jefe de Bodega">Jefe de Bodega</option>
+                            <option value="Operador de Producción">Operador de Producción</option>
+                            <option value="Inspector de Calidad">Inspector de Calidad</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Nueva Contraseña (opcional)</label>
+                        <input type="password" id="edit-password" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-base outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Dejar en blanco para no cambiar">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel" id="modal-editar-cancel">Cancelar</button>
+                <button class="modal-btn modal-btn-success" id="modal-editar-guardar">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const veredicto = document.getElementById('calidad-veredicto');
+            const divCategoria = document.getElementById('div-categoria-anomalia');
+            if (veredicto && divCategoria) {
+                veredicto.addEventListener('change', function() {
+                    divCategoria.style.display = this.value === 'false' ? 'block' : 'none';
+                });
+                divCategoria.style.display = veredicto.value === 'false' ? 'block' : 'none';
+            }
+        });
+    </script>
+</body>
+</html>
