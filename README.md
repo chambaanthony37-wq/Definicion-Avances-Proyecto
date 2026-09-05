@@ -28,6 +28,7 @@ Contraseña: 123456
 
 ## CREDENCIALES DE ACCESO:
 ## BASE DE DATOS(SUPABASE)
+## Enlace: https://supabase.com/
 
 Usuario: jessica.arias@cenestur.edu.ec
 
