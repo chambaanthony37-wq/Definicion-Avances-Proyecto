@@ -24,7 +24,9 @@ Contraseña: 123456
 
 ## CREDENCIALES DE ACCESO:
 Base de Datos(Supabase)
+
 Usuario: jessica.arias@cenestur.edu.ec
+
 Contraseña: A.0106152176_.a
 <img width="941" height="551" alt="image" src="https://github.com/user-attachments/assets/796cd1ab-1cf0-4df3-8314-a0ab059be048" />
 
