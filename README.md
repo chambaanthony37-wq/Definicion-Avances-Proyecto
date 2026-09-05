@@ -13,11 +13,12 @@ DESPLIEGUE
 Usuario administrador: chamba15@gmail.com
 Contraseña: 123456
 
-Usuario administrador: operador11@gmail.com
+Usuario Operador de Producción: operador11@gmail.com
 Contraseña: 123456
 
-Usuario administrador: inspector12@gmail.com
+Usuario Inspector de Calidad: inspector12@gmail.com
 Contraseña: 123456
 
-Usuario administrador: jefedebodega10@gmail.com
+Usuario Jefe de Bodega: jefedebodega10@gmail.com
 Contraseña: 123456
+
