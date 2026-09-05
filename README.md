@@ -4,10 +4,11 @@ ENTREGA DEL PROYECTO FINAL DE DESTILERIA
 
 DESPLIEGUE
 
-El sistema web integrado para la destilería está redesplegado con éxito.
-Enlace del sistema en la red: https://destileria-five.vercel.app/
+## EL SISTEMA WEB INTEGRADO PARA LA DESTILERÍA ESTÁ REDESPLEGADO CON ÉXITO.
 
-CREDENCIALES DE ACCESO
+##Enlace del sistema en la red: https://destileria-five.vercel.app/
+
+##CREDENCIALES DE ACCESO
 
 Usuario administrador: chamba15@gmail.com
 Contraseña: 123456
