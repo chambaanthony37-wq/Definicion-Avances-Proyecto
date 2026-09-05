@@ -27,7 +27,7 @@ Usuario Jefe de Bodega: jefedebodega10@gmail.com
 Contraseña: 123456
 
 ## CREDENCIALES DE ACCESO:
-Base de Datos(Supabase)
+## BASE DE DATOS(SUPABASE)
 
 Usuario: jessica.arias@cenestur.edu.ec
 
